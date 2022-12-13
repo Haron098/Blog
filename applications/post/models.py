@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 User = get_user_model()
 
@@ -16,7 +17,7 @@ class Post(models.Model):
     description = models.TextField(blank=True, null=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='posts')
-    image = models.ImageField(upload_to='images/')
+    # image = models.ImageField(upload_to='images/')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -27,8 +28,14 @@ class Post(models.Model):
         ordering = ['-id']
 
     def save(self, *args, **kwargs):
-        self.title = 'fffffffff'
         return super().save(*args, **kwargs)
+
+class Image(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='images/')
+    fields = 'likes'
+
+
 
 
 class Comment(models.Model):
@@ -43,5 +50,31 @@ class Comment(models.Model):
 
     # class Meta:
     #     ordering = ['-id']
+
+
+class Like(models.Model):
+    """
+    Модель лайков
+    """
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
+    like = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.owner} -> {self.like}'
+
+
+class Rating(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ratings')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='ratings')
+    rating = models.SmallIntegerField(
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ], blank=True, null=True
+    )
+
+    def __str__(self):
+        return f'{self.owner} -> {self.rating}'
 
 
